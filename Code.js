@@ -364,3 +364,8 @@ function getDashboardData(monthStr) {
     throw err;
   }
 }
+
+// getWebAppUrl - returns the deployed web app base URL for navigation
+function getWebAppUrl() {
+  return ScriptApp.getService().getUrl();
+}

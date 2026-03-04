@@ -449,9 +449,9 @@
 <nav class="topnav">
   <div class="brand">Ormoc <span>Printshoppe</span> CRM</div>
   <div class="nav-links">
-    <a href="?page=lead">📋 New Lead</a>
-    <a href="?page=search">🔍 Search</a>
-    <a href="?page=dashboard" class="active">📊 Dashboard</a>
+    <a data-page="lead" href="#">📋 New Lead</a>
+    <a data-page="search" href="#">🔍 Search</a>
+    <a data-page="dashboard" href="#" class="active">📊 Dashboard</a>
   </div>
 </nav>
 
@@ -757,6 +757,20 @@
     if (n >= 1000)    return (n / 1000).toFixed(1) + 'K';
     return Number(n).toLocaleString();
   }
+</script>
+
+<script>
+  // Navigation helper — builds correct Apps Script web app URLs
+  (function() {
+    google.script.run
+      .withSuccessHandler(function(baseUrl) {
+        var links = document.querySelectorAll('[data-page]');
+        links.forEach(function(el) {
+          el.href = baseUrl + '?page=' + el.getAttribute('data-page');
+        });
+      })
+      .getWebAppUrl();
+  })();
 </script>
 </body>
 </html>
