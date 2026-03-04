@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Lead — Ormoc Printshoppe</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: #1a3c5e;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .topnav .brand { font-size: 15px; font-weight: 700; letter-spacing: 0.3px; }
+    .topnav .brand span { color: #f6ad55; }
+    .nav-links { display: flex; gap: 6px; }
+    .nav-links a {
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .page { max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a3c5e;
+    }
+    .page-header p {
+      font-size: 13px;
+      color: #718096;
+      margin-top: 4px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #4a5568;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #1a3c5e;
+    }
+
+    /* ── FORM GRID ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-grid.single { grid-template-columns: 1fr; }
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+    .full-width { grid-column: 1 / -1; }
+
+    /* ── FORM FIELDS ── */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .field label .req { color: #e53e3e; margin-left: 2px; }
+
+    .field input,
+    .field select,
+    .field textarea {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: #1a202c;
+      background: #fafafa;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      font-family: inherit;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: #1a3c5e;
+      box-shadow: 0 0 0 3px rgba(26,60,94,0.1);
+      background: white;
+    }
+    .field input.error,
+    .field select.error,
+    .field textarea.error {
+      border-color: #e53e3e;
+      box-shadow: 0 0 0 3px rgba(229,62,62,0.1);
+    }
+    .field textarea { resize: vertical; min-height: 80px; }
+    .field .hint {
+      font-size: 11px;
+      color: #a0aec0;
+      margin-top: 2px;
+    }
+
+    /* ── UPLOAD SECTION ── */
+    .upload-box {
+      border: 2px dashed #cbd5e0;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      background: #f7fafc;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .upload-box:hover { border-color: #1a3c5e; background: #ebf4ff; }
+    .upload-box.has-file { border-color: #38a169; background: #f0fff4; }
+    .upload-box input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+    }
+    .upload-box .upload-icon { font-size: 24px; margin-bottom: 6px; }
+    .upload-box .upload-label { font-size: 13px; font-weight: 600; color: #4a5568; }
+    .upload-box .upload-sub { font-size: 11px; color: #a0aec0; margin-top: 3px; }
+    .upload-box .file-name {
+      font-size: 12px; color: #38a169; font-weight: 600; margin-top: 6px;
+      word-break: break-all;
+    }
+    .upload-progress {
+      height: 4px; background: #e2e8f0; border-radius: 2px;
+      margin-top: 8px; overflow: hidden; display: none;
+    }
+    .upload-progress-bar {
+      height: 100%; background: #1a3c5e; border-radius: 2px;
+      width: 0%; transition: width 0.3s;
+    }
+    .upload-link {
+      font-size: 11px; margin-top: 6px;
+    }
+    .upload-link a { color: #1a3c5e; text-decoration: underline; }
+
+    /* ── TOGGLE SECTION ── */
+    .toggle-section { display: none; }
+    .toggle-section.visible { display: contents; }
+
+    /* ── SUBMIT AREA ── */
+    .submit-area {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      padding-top: 8px;
+    }
+    .btn {
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: #1a3c5e;
+      color: white;
+    }
+    .btn-primary:hover { background: #153050; transform: translateY(-1px); }
+    .btn-primary:disabled { background: #a0aec0; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: #edf2f7;
+      color: #4a5568;
+    }
+    .btn-secondary:hover { background: #e2e8f0; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a202c;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 9999;
+      transition: transform 0.3s ease;
+      min-width: 260px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { background: #276749; }
+    #toast.error   { background: #c53030; }
+
+    /* ── LOADING OVERLAY ── */
+    #overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(255,255,255,0.85);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #overlay.show { display: flex; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #1a3c5e;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #overlay p { font-size: 14px; color: #4a5568; font-weight: 500; }
+
+    /* ── REQUIRED BADGE ── */
+    .required-note {
+      font-size: 12px; color: #718096; margin-bottom: 16px;
+    }
+    .required-note span { color: #e53e3e; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+  <div class="brand">Ormoc <span>Printshoppe</span> CRM</div>
+  <div class="nav-links">
+    <a href="#" class="active">📋 New Lead</a>
+    <a href="#" onclick="navigate('search')">🔍 Search</a>
+    <a href="#" onclick="navigate('dashboard')">📊 Dashboard</a>
+  </div>
+</nav>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div class="spinner"></div>
+  <p id="overlay-msg">Submitting lead...</p>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- PAGE -->
+<div class="page">
+  <div class="page-header">
+    <h1>📋 New Lead Entry</h1>
+    <p>Fill in all required fields marked with <span style="color:#e53e3e">★</span> before submitting.</p>
+  </div>
+
+  <!-- SECTION 1: VISIT INFO -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:#3182ce"></div>Visit Information</div>
+    <div class="required-note"><span>★</span> Required fields</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Date Visited <span class="req">★</span></label>
+        <input type="date" id="date" required>
+      </div>
+      <div class="field">
+        <label>Area / Barangay <span class="req">★</span></label>
+        <input type="text" id="area" placeholder="e.g. Ormoc Proper">
+      </div>
+      <div class="field">
+        <label>Municipality</label>
+        <input type="text" id="municipality" placeholder="e.g. Ormoc City">
+      </div>
+      <div class="field">
+        <label>Client Status <span class="req">★</span></label>
+        <select id="clientStatus">
+          <option value="New Client">New Client</option>
+          <option value="Existing Client">Existing Client</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: BUSINESS & CONTACT -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:#805ad5"></div>Business & Contact</div>
+    <div class="form-grid">
+      <div class="field full-width">
+        <label>Business Name <span class="req">★</span></label>
+        <input type="text" id="businessName" placeholder="e.g. LCC Mall Ormoc">
+      </div>
+      <div class="field">
+        <label>Industry Type</label>
+        <select id="industry">
+          <option value="">— Select —</option>
+          <option>School</option>
+          <option>Clinic</option>
+          <option>LGU</option>
+          <option>Resort</option>
+          <option>Restaurant</option>
+          <option>Retail</option>
+          <option>Corporate</option>
+          <option>Contractor</option>
+          <option>Construction</option>
+          <option>Hardware</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Current Supplier</label>
+        <input type="text" id="currentSupplier" placeholder="e.g. Print Master">
+      </div>
+      <div class="field">
+        <label>Contact Person <span class="req">★</span></label>
+        <input type="text" id="contactPerson" placeholder="Full name">
+      </div>
+      <div class="field">
+        <label>Position / Title</label>
+        <input type="text" id="position" placeholder="e.g. Purchasing Officer">
+      </div>
+      <div class="field">
+        <label>Mobile Number <span class="req">★</span></label>
+        <input type="tel" id="mobile" placeholder="09XXXXXXXXX">
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="email@example.com">
+      </div>
+      <div class="field">
+        <label>Decision Maker? <span class="req">★</span></label>
+        <select id="decisionMaker">
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: PIPELINE -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:#38a169"></div>Pipeline Tracking</div>
+    <div class="form-grid">
+      <div class="field full-width">
+        <label>Items Needed</label>
+        <input type="text" id="itemsNeeded" placeholder="e.g. Tarpaulin, Sintra Board, ID Cards">
+      </div>
+      <div class="field">
+        <label>Estimated Value (₱) <span class="req">★</span></label>
+        <input type="number" id="estimatedValue" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Stage <span class="req">★</span></label>
+        <select id="stage">
+          <option value="Lead">Lead</option>
+          <option value="Prospect">Prospect</option>
+          <option value="Qualified">Qualified</option>
+          <option value="Quoted">Quoted</option>
+          <option value="Follow-up">Follow-up</option>
+          <option value="Hot">Hot</option>
+          <option value="Closed Won">Closed Won</option>
+          <option value="Closed Lost">Closed Lost</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Next Contact Date <span class="req">★</span></label>
+        <input type="date" id="nextContactDate">
+      </div>
+      <div class="field">
+        <label>Next Action Type</label>
+        <select id="nextActionType">
+          <option value="">— Select —</option>
+          <option>Call</option>
+          <option>Visit</option>
+          <option>Send Quotation</option>
+          <option>Quote Follow-up</option>
+          <option>Final Close</option>
+          <option>Email</option>
+          <option>Viber</option>
+        </select>
+      </div>
+      <div class="field full-width">
+        <label>Remarks / Notes <span class="req">★</span></label>
+        <textarea id="remarks" placeholder="What happened during the visit? Key points discussed, client interest level, any concerns..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: QUOTATION -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:#dd6b20"></div>Quotation</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Quotation Sent?</label>
+        <select id="quotationSent" onchange="toggleQuotation()">
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Sent Via</label>
+        <select id="sentVia">
+          <option value="">— Select —</option>
+          <option>Email</option>
+          <option>Viber</option>
+          <option>In-person</option>
+        </select>
+      </div>
+
+      <!-- Shown only when quotation = Yes -->
+      <div class="field toggle-section" id="quotAmountField">
+        <label>Quotation Amount (₱)</label>
+        <input type="number" id="quotationAmount" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="field toggle-section" id="quotFileField">
+        <label>Quotation PDF</label>
+        <div class="upload-box" id="quotUploadBox">
+          <input type="file" id="quotFile" accept=".pdf,application/pdf" onchange="handleFileSelect('quot')">
+          <div class="upload-icon">📄</div>
+          <div class="upload-label">Tap to upload PDF</div>
+          <div class="upload-sub">Quotation document only</div>
+          <div class="file-name" id="quotFileName"></div>
+        </div>
+        <div class="upload-progress" id="quotProgress">
+          <div class="upload-progress-bar" id="quotProgressBar"></div>
+        </div>
+        <div class="upload-link" id="quotLink"></div>
+      </div>
+      <div class="field toggle-section" id="sentProofField">
+        <label>Sent Proof Link</label>
+        <input type="text" id="sentProofLink" placeholder="Screenshot/email proof URL">
+        <div class="hint">Optional: Viber screenshot or email thread link</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: PHOTO -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:#e53e3e"></div>Visit Photo <span style="color:#e53e3e;font-size:11px;margin-left:4px;">★ Required</span></div>
+    <div class="upload-box" id="photoUploadBox">
+      <input type="file" id="photoFile" accept="image/*" onchange="handleFileSelect('photo')">
+      <div class="upload-icon">📷</div>
+      <div class="upload-label">Tap to upload proof photo</div>
+      <div class="upload-sub">JPG, PNG — proof of visit</div>
+      <div class="file-name" id="photoFileName"></div>
+    </div>
+    <div class="upload-progress" id="photoProgress">
+      <div class="upload-progress-bar" id="photoProgressBar"></div>
+    </div>
+    <div class="upload-link" id="photoLink"></div>
+    <p class="hint" style="margin-top:10px;">📌 Upload your photo first before submitting the form.</p>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="card">
+    <div class="submit-area">
+      <button class="btn btn-secondary" onclick="resetForm()">🔄 Reset Form</button>
+      <button class="btn btn-primary" id="submitBtn" onclick="submitLead()">
+        ✅ Submit Lead
+      </button>
+    </div>
+  </div>
+
+</div><!-- end .page -->
+
+<script>
+  // ── SET TODAY'S DATE ──────────────────────────────────────────
+  window.onload = function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
+    document.getElementById('nextContactDate').value = today;
+  };
+
+  // ── TOGGLE QUOTATION FIELDS ───────────────────────────────────
+  function toggleQuotation() {
+    const isYes = document.getElementById('quotationSent').value === 'Yes';
+    ['quotAmountField','quotFileField','sentProofField'].forEach(id => {
+      document.getElementById(id).classList.toggle('visible', isYes);
+    });
+  }
+
+  // ── FILE SELECT HANDLER ───────────────────────────────────────
+  const uploadedLinks = { photo: '', quot: '' };
+
+  function handleFileSelect(type) {
+    const file = document.getElementById(type === 'photo' ? 'photoFile' : 'quotFile').files[0];
+    if (!file) return;
+
+    const nameEl    = document.getElementById(type + 'FileName');
+    const boxEl     = document.getElementById(type + 'UploadBox');
+    const progressEl = document.getElementById(type + 'Progress');
+    const barEl     = document.getElementById(type + 'ProgressBar');
+    const linkEl    = document.getElementById(type + 'Link');
+
+    nameEl.textContent = '⏳ Uploading: ' + file.name;
+    boxEl.classList.remove('has-file');
+    progressEl.style.display = 'block';
+    barEl.style.width = '0%';
+    linkEl.innerHTML = '';
+    uploadedLinks[type] = '';
+
+    // Animate progress bar
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress = Math.min(progress + 10, 85);
+      barEl.style.width = progress + '%';
+    }, 150);
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const b64 = e.target.result.split(',')[1];
+
+      // Build file name
+      const bizName = document.getElementById('businessName').value || 'Unknown';
+      const dateVal = document.getElementById('date').value || new Date().toISOString().split('T')[0];
+      const safe    = bizName.replace(/[^a-zA-Z0-9]/g, '_');
+      const fileName = type === 'photo'
+        ? dateVal + '_' + safe + '.' + file.name.split('.').pop()
+        : 'Q_' + dateVal + '_' + safe + '.pdf';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          clearInterval(interval);
+          barEl.style.width = '100%';
+          setTimeout(() => { progressEl.style.display = 'none'; }, 500);
+
+          if (result && result.url) {
+            uploadedLinks[type] = result.url;
+            nameEl.textContent  = '✅ ' + result.name;
+            boxEl.classList.add('has-file');
+            linkEl.innerHTML = '<a href="' + result.url + '" target="_blank">View uploaded file ↗</a>';
+            showToast('File uploaded successfully!', 'success');
+          } else {
+            nameEl.textContent = '❌ Upload failed';
+            showToast('Upload failed. Try again.', 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          clearInterval(interval);
+          progressEl.style.display = 'none';
+          nameEl.textContent = '❌ Error: ' + err.message;
+          showToast('Upload error: ' + err.message, 'error');
+        })
+        .saveFileToDrive(b64, file.type, fileName, type === 'photo' ? 'photo' : 'quotation');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── SUBMIT LEAD ───────────────────────────────────────────────
+  function submitLead() {
+    // Collect values
+    const data = {
+      date:             document.getElementById('date').value,
+      area:             document.getElementById('area').value.trim(),
+      municipality:     document.getElementById('municipality').value.trim(),
+      businessName:     document.getElementById('businessName').value.trim(),
+      industry:         document.getElementById('industry').value,
+      contactPerson:    document.getElementById('contactPerson').value.trim(),
+      position:         document.getElementById('position').value.trim(),
+      mobile:           document.getElementById('mobile').value.trim(),
+      email:            document.getElementById('email').value.trim(),
+      decisionMaker:    document.getElementById('decisionMaker').value,
+      currentSupplier:  document.getElementById('currentSupplier').value.trim(),
+      clientStatus:     document.getElementById('clientStatus').value,
+      itemsNeeded:      document.getElementById('itemsNeeded').value.trim(),
+      estimatedValue:   document.getElementById('estimatedValue').value,
+      stage:            document.getElementById('stage').value,
+      nextContactDate:  document.getElementById('nextContactDate').value,
+      nextActionType:   document.getElementById('nextActionType').value,
+      remarks:          document.getElementById('remarks').value.trim(),
+      quotationSent:    document.getElementById('quotationSent').value,
+      quotationAmount:  document.getElementById('quotationAmount').value,
+      sentVia:          document.getElementById('sentVia').value,
+      sentProofLink:    document.getElementById('sentProofLink').value.trim(),
+      photoLink:        uploadedLinks.photo,
+      quotationFileLink: uploadedLinks.quot,
+    };
+
+    // Validate required fields
+    const required = {
+      'Date Visited':    data.date,
+      'Area':            data.area,
+      'Business Name':   data.businessName,
+      'Contact Person':  data.contactPerson,
+      'Mobile Number':   data.mobile,
+      'Estimated Value': data.estimatedValue,
+      'Remarks':         data.remarks,
+      'Visit Photo':     data.photoLink,
+    };
+    const missing = Object.keys(required).filter(k => !required[k]);
+    if (missing.length) {
+      showToast('Missing: ' + missing.join(', '), 'error');
+      // Highlight missing fields
+      const fieldMap = {
+        'Date Visited': 'date', 'Area': 'area', 'Business Name': 'businessName',
+        'Contact Person': 'contactPerson', 'Mobile Number': 'mobile',
+        'Estimated Value': 'estimatedValue', 'Remarks': 'remarks'
+      };
+      missing.forEach(k => {
+        const el = document.getElementById(fieldMap[k]);
+        if (el) { el.classList.add('error'); el.addEventListener('input', () => el.classList.remove('error'), {once:true}); }
+      });
+      return;
+    }
+
+    // Show overlay
+    showOverlay('Submitting lead...');
+    document.getElementById('submitBtn').disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        hideOverlay();
+        document.getElementById('submitBtn').disabled = false;
+        if (result.success) {
+          showToast('✅ Lead submitted! ID: ' + result.leadId, 'success');
+          setTimeout(resetForm, 2000);
+        } else {
+          showToast('❌ ' + result.message, 'error');
+        }
+      })
+      .withFailureHandler(function(err) {
+        hideOverlay();
+        document.getElementById('submitBtn').disabled = false;
+        showToast('❌ Error: ' + err.message, 'error');
+      })
+      .submitLeadFromWeb(data);
+  }
+
+  // ── RESET ─────────────────────────────────────────────────────
+  function resetForm() {
+    const today = new Date().toISOString().split('T')[0];
+    const ids = ['area','municipality','businessName','contactPerson','position',
+                 'mobile','email','currentSupplier','itemsNeeded','estimatedValue',
+                 'nextContactDate','remarks','quotationAmount','sentProofLink'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.value = ''; el.classList.remove('error'); }
+    });
+    document.getElementById('date').value           = today;
+    document.getElementById('nextContactDate').value = today;
+    document.getElementById('industry').value       = '';
+    document.getElementById('decisionMaker').value  = 'Yes';
+    document.getElementById('clientStatus').value   = 'New Client';
+    document.getElementById('stage').value          = 'Lead';
+    document.getElementById('quotationSent').value  = 'No';
+    document.getElementById('nextActionType').value = '';
+    document.getElementById('sentVia').value        = '';
+    ['quotAmountField','quotFileField','sentProofField'].forEach(id => {
+      document.getElementById(id).classList.remove('visible');
+    });
+    ['photo','quot'].forEach(type => {
+      uploadedLinks[type] = '';
+      const nameEl = document.getElementById(type + 'FileName');
+      const boxEl  = document.getElementById(type + 'UploadBox');
+      const linkEl = document.getElementById(type + 'Link');
+      if (nameEl) nameEl.textContent = '';
+      if (boxEl)  boxEl.classList.remove('has-file');
+      if (linkEl) linkEl.innerHTML = '';
+    });
+    document.getElementById('photoFile').value = '';
+    const qf = document.getElementById('quotFile');
+    if (qf) qf.value = '';
+  }
+
+  // ── NAVIGATE (placeholder for multi-page routing) ─────────────
+  function navigate(page) {
+    google.script.run.navigateTo(page);
+  }
+
+  // ── UI HELPERS ────────────────────────────────────────────────
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = 'show ' + type;
+    setTimeout(() => { t.className = ''; }, 4000);
+  }
+  function showOverlay(msg) {
+    document.getElementById('overlay-msg').textContent = msg;
+    document.getElementById('overlay').classList.add('show');
+  }
+  function hideOverlay() {
+    document.getElementById('overlay').classList.remove('show');
+  }
+</script>
+</body>
+</html>
