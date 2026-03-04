@@ -288,3 +288,79 @@ function getFollowUpCount(db, businessName) {
   ).length;
   return count + 1;
 }
+
+// getDashboardData - called by DashboardPage.html
+function getDashboardData(monthStr) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const db = ss.getSheetByName(DB_SHEET);
+    if (!db) throw new Error('Sheet not found.');
+    const lastRow = db.getLastRow();
+    const allRows = lastRow < 5 ? [] : db.getRange(5, 1, lastRow - 4, 28).getValues();
+    const now = new Date();
+    const filterDate = monthStr ? new Date(monthStr + '-01') : new Date(now.getFullYear(), now.getMonth(), 1);
+    const filterYr = filterDate.getFullYear();
+    const filterMo = filterDate.getMonth();
+    const monthLabel = filterDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const monthRows = allRows.filter(r => {
+      if (!r[0]) return false;
+      const d = new Date(r[2]);
+      return !isNaN(d) && d.getFullYear() === filterYr && d.getMonth() === filterMo;
+    });
+    const weekStart = new Date(now);
+    const dayOfWeek = now.getDay();
+    weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    weekStart.setHours(0, 0, 0, 0);
+    const weekRows = allRows.filter(r => {
+      if (!r[0]) return false;
+      const d = new Date(r[2]);
+      return !isNaN(d) && d >= weekStart;
+    });
+    const isValid = r => r[5] && r[7] && r[9] && r[21];
+    const totalLeads     = monthRows.length;
+    const validVisits    = monthRows.filter(isValid).length;
+    const decisionMakers = monthRows.filter(r => r[11] === 'Yes').length;
+    const quotationsSent = monthRows.filter(r => r[22] && r[25]).length;
+    const followupsDone  = monthRows.filter(r => (r[20] || 0) > 1).length;
+    const hotLeads       = monthRows.filter(r => r[16] === 'Hot').length;
+    const closedWon      = monthRows.filter(r => r[16] === 'Closed Won' && r[13] === 'New Client').length;
+    const closedRevenue  = monthRows.filter(r => r[16] === 'Closed Won').reduce((s, r) => s + (Number(r[15]) || 0), 0);
+    const pipelineValue  = monthRows.filter(r => !['Closed Lost','Closed Won'].includes(r[16])).reduce((s, r) => s + (Number(r[15]) || 0), 0);
+    const weekNum = Math.ceil((now.getDate() + (weekStart.getDay() || 7) - 1) / 7);
+    const stageOrder = ['Lead','Prospect','Qualified','Quoted','Follow-up','Hot','Closed Won','Closed Lost'];
+    const pipeline = stageOrder.map(stage => ({
+      stage,
+      count: allRows.filter(r => r[0] && r[16] === stage).length,
+      value: allRows.filter(r => r[0] && r[16] === stage).reduce((s, r) => s + (Number(r[15]) || 0), 0)
+    }));
+    const todayMs = now.getTime();
+    const stuckLeads        = allRows.filter(r => r[0] && !['Closed Won','Closed Lost'].includes(r[16]) && !isNaN(new Date(r[17])) && (todayMs - new Date(r[17]).getTime()) > 14*86400000).length;
+    const pendingQuotations = allRows.filter(r => r[0] && r[16] === 'Quoted' && !isNaN(new Date(r[17])) && (todayMs - new Date(r[17]).getTime()) > 7*86400000).length;
+    const coldHotLeads      = allRows.filter(r => r[0] && r[16] === 'Hot' && !isNaN(new Date(r[17])) && (todayMs - new Date(r[17]).getTime()) > 3*86400000).length;
+    const missingPhotos     = allRows.filter(r => r[0] && !r[21]).length;
+    const dueTodayCount     = allRows.filter(r => {
+      if (!r[0] || !r[18] || ['Closed Won','Closed Lost'].includes(r[16])) return false;
+      const na = new Date(r[18]); na.setHours(0,0,0,0);
+      const td = new Date(now);   td.setHours(0,0,0,0);
+      return !isNaN(na) && na <= td;
+    }).length;
+    const salesScore = Math.min((validVisits/150)*15 + (decisionMakers/60)*15 + (quotationsSent/20)*15 + (followupsDone/80)*10 + Math.min(closedWon/2,1)*10, 70);
+    const complianceScore = Math.min(totalLeads > 0 ? (validVisits/totalLeads)*5 + 5 : 5, 30);
+    const kpiScore = salesScore + complianceScore;
+    return {
+      monthLabel, totalLeads, validVisits, decisionMakers, quotationsSent,
+      followupsDone, hotLeads, closedWon, closedRevenue, pipelineValue,
+      weekVisits: weekRows.length,
+      weekValidVisits: weekRows.filter(isValid).length,
+      weekDMs: weekRows.filter(r => r[11] === 'Yes').length,
+      weekQuotations: weekRows.filter(r => r[22] && r[25]).length,
+      weekHotLeads: weekRows.filter(r => r[16] === 'Hot').length,
+      currentWeek: weekNum, pipeline,
+      stuckLeads, pendingQuotations, coldHotLeads, missingPhotos, dueTodayCount,
+      kpiScore, commissionEligible: closedRevenue >= 25000,
+    };
+  } catch(err) {
+    Logger.log('getDashboardData error: ' + err.message);
+    throw err;
+  }
+}
