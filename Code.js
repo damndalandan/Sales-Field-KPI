@@ -175,6 +175,112 @@ function generateQuotationNo(db) {
   return prefix + String(max + 1).padStart(3, "0");
 }
 
+// ── SEARCH LEADS ─────────────────────────────────────────────────────
+// Called by SearchPage.html to find matching leads
+function searchLeads(query) {
+  try {
+    const ss   = SpreadsheetApp.getActiveSpreadsheet();
+    const db   = ss.getSheetByName(DB_SHEET);
+    if (!db) throw new Error('Sheet not found.');
+
+    const q        = query.toString().toLowerCase().trim();
+    const lastRow  = db.getLastRow();
+    if (lastRow < 5) return [];
+
+    const data = db.getRange(5, 1, lastRow - 4, 28).getValues();
+    const results = [];
+
+    data.forEach((row, i) => {
+      if (!row[0]) return; // Skip empty rows
+      const leadId   = row[0].toString();
+      const bizName  = row[5].toString();
+      if (leadId.toLowerCase().includes(q) || bizName.toLowerCase().includes(q)) {
+        results.push({
+          rowIndex:        i + 5,         // Actual sheet row number
+          leadId:          leadId,
+          dateAdded:       fmtDateStr(row[1]),
+          dateVisited:     fmtDateStr(row[2]),
+          area:            row[3].toString(),
+          municipality:    row[4].toString(),
+          businessName:    bizName,
+          industry:        row[6].toString(),
+          contactPerson:   row[7].toString(),
+          position:        row[8].toString(),
+          mobile:          row[9].toString(),
+          email:           row[10].toString(),
+          decisionMaker:   row[11].toString(),
+          currentSupplier: row[12].toString(),
+          clientStatus:    row[13].toString(),
+          itemsNeeded:     row[14].toString(),
+          estimatedValue:  row[15] || 0,
+          stage:           row[16].toString(),
+          lastContactDate: fmtDateStr(row[17]),
+          nextContactDate: fmtDateStr(row[18]),
+          nextActionType:  row[19].toString(),
+          followUpCount:   row[20] || 1,
+          photoLink:       row[21].toString(),
+          quotationNo:     row[22].toString(),
+          quotationAmount: row[24] || 0,
+        });
+      }
+    });
+
+    // Sort by date added descending (most recent first)
+    results.sort((a, b) => (b.dateAdded > a.dateAdded ? 1 : -1));
+    return results;
+
+  } catch(err) {
+    Logger.log('searchLeads error: ' + err.message);
+    throw err;
+  }
+}
+
+// ── UPDATE LEAD STAGE ─────────────────────────────────────────────────
+// Updates Stage, Next Action, Next Contact Date on an existing row
+function updateLeadStage(update) {
+  try {
+    const ss  = SpreadsheetApp.getActiveSpreadsheet();
+    const db  = ss.getSheetByName(DB_SHEET);
+    if (!db)  throw new Error('Sheet not found.');
+
+    const row = update.rowIndex;
+    if (!row || row < 5) throw new Error('Invalid row index.');
+
+    const today = fmtDateStr(new Date());
+
+    // Update specific columns only — never overwrite the full row
+    db.getRange(row, 17).setValue(update.stage);           // Q  Stage
+    db.getRange(row, 18).setValue(today);                   // R  Last Contact Date
+    db.getRange(row, 19).setValue(update.nextContactDate); // S  Next Action Date
+    db.getRange(row, 20).setValue(update.nextActionType);  // T  Next Action Type
+
+    // If notes provided, append to existing remarks in col X (24)
+    if (update.notes) {
+      const existing = db.getRange(row, 24).getValue().toString();
+      const newVal   = existing
+        ? existing + '\n[' + today + '] ' + update.notes
+        : '[' + today + '] ' + update.notes;
+      db.getRange(row, 24).setValue(newVal);
+    }
+
+    return { success: true, message: 'Stage updated.' };
+
+  } catch(err) {
+    Logger.log('updateLeadStage error: ' + err.message);
+    return { success: false, message: err.message };
+  }
+}
+
+// ── DATE FORMAT HELPER ────────────────────────────────────────────────
+function fmtDateStr(val) {
+  if (!val) return "";
+  try {
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    return Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd");
+  } catch(e) { return String(val); }
+}
+
 function getFollowUpCount(db, businessName) {
   const names = db.getRange(5, 6, Math.max(db.getMaxRows() - 4, 1), 1).getValues().flat();
   const count = names.filter(n =>

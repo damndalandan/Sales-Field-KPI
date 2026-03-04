@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Leads — Ormoc Printshoppe</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: #1a3c5e;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .topnav .brand { font-size: 15px; font-weight: 700; }
+    .topnav .brand span { color: #f6ad55; }
+    .nav-links { display: flex; gap: 6px; }
+    .nav-links a {
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+
+    .page { max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
+
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; color: #1a3c5e; }
+    .page-header p { font-size: 13px; color: #718096; margin-top: 4px; }
+
+    /* ── SEARCH BAR ── */
+    .search-bar {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: flex;
+      gap: 10px;
+    }
+    .search-bar input {
+      flex: 1;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-bar input:focus {
+      outline: none;
+      border-color: #1a3c5e;
+      box-shadow: 0 0 0 3px rgba(26,60,94,0.1);
+    }
+    .btn-search {
+      background: #1a3c5e;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn-search:hover { background: #153050; }
+
+    /* ── RESULTS ── */
+    #results { display: none; }
+    .results-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #718096;
+      margin-bottom: 12px;
+    }
+
+    .lead-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 4px solid #e2e8f0;
+    }
+    .lead-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      transform: translateY(-1px);
+    }
+    .lead-card.stage-lead         { border-left-color: #a0aec0; }
+    .lead-card.stage-prospect     { border-left-color: #90cdf4; }
+    .lead-card.stage-qualified    { border-left-color: #68d391; }
+    .lead-card.stage-quoted       { border-left-color: #f6ad55; }
+    .lead-card.stage-follow-up    { border-left-color: #fc8181; }
+    .lead-card.stage-hot          { border-left-color: #e53e3e; }
+    .lead-card.stage-closed-won   { border-left-color: #38a169; }
+    .lead-card.stage-closed-lost  { border-left-color: #718096; }
+
+    .lead-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .lead-biz { font-size: 16px; font-weight: 700; color: #1a202c; }
+    .lead-id  { font-size: 11px; color: #a0aec0; font-family: monospace; }
+
+    .stage-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-lead         { background: #edf2f7; color: #4a5568; }
+    .badge-prospect     { background: #ebf8ff; color: #2b6cb0; }
+    .badge-qualified    { background: #f0fff4; color: #276749; }
+    .badge-quoted       { background: #fffaf0; color: #c05621; }
+    .badge-follow-up    { background: #fff5f5; color: #c53030; }
+    .badge-hot          { background: #fff5f5; color: #c53030; }
+    .badge-closed-won   { background: #f0fff4; color: #276749; }
+    .badge-closed-lost  { background: #f7fafc; color: #718096; }
+
+    .lead-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: #718096;
+    }
+    .lead-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .lead-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #f0f4f8;
+    }
+    .btn-action {
+      flex: 1;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .btn-update-stage {
+      background: #ebf4ff;
+      color: #1a3c5e;
+    }
+    .btn-update-stage:hover { background: #bee3f8; }
+    .btn-followup {
+      background: #1a3c5e;
+      color: white;
+    }
+    .btn-followup:hover { background: #153050; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: #a0aec0;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── MODAL OVERLAY ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+    }
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px 24px 40px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .modal-handle {
+      width: 40px; height: 4px;
+      background: #e2e8f0;
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a3c5e;
+      margin-bottom: 6px;
+    }
+    .modal-subtitle {
+      font-size: 13px;
+      color: #718096;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f4f8;
+    }
+
+    /* ── MODAL FORM FIELDS ── */
+    .mfield { margin-bottom: 16px; }
+    .mfield label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+    }
+    .mfield input,
+    .mfield select,
+    .mfield textarea {
+      width: 100%;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #1a202c;
+      background: #fafafa;
+      transition: border-color 0.2s;
+    }
+    .mfield input:focus,
+    .mfield select:focus,
+    .mfield textarea:focus {
+      outline: none;
+      border-color: #1a3c5e;
+      box-shadow: 0 0 0 3px rgba(26,60,94,0.1);
+      background: white;
+    }
+    .mfield textarea { resize: vertical; min-height: 70px; }
+    .mfield .read-only {
+      background: #f7fafc;
+      color: #4a5568;
+      font-weight: 600;
+      cursor: not-allowed;
+    }
+
+    .mfield-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 480px) { .mfield-row { grid-template-columns: 1fr; } }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-modal-cancel {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      background: #edf2f7;
+      color: #4a5568;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-modal-save {
+      flex: 2;
+      padding: 12px;
+      border-radius: 8px;
+      background: #1a3c5e;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-modal-save:hover { background: #153050; }
+    .btn-modal-save:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    /* ── HISTORY PILLS ── */
+    .history-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .history-pill {
+      background: #f0f4f8;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: #4a5568;
+      font-weight: 500;
+    }
+    .history-pill.highlight { background: #ebf4ff; color: #1a3c5e; font-weight: 700; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a202c;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 9999;
+      transition: transform 0.3s ease;
+      min-width: 260px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { background: #276749; }
+    #toast.error   { background: #c53030; }
+
+    /* ── LOADING ── */
+    #overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(255,255,255,0.85);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #overlay.show { display: flex; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #1a3c5e;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #overlay p { font-size: 14px; color: #4a5568; font-weight: 500; }
+
+    .section-divider {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #a0aec0;
+      margin: 16px 0 10px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+  <div class="brand">Ormoc <span>Printshoppe</span> CRM</div>
+  <div class="nav-links">
+    <a href="?page=lead">📋 New Lead</a>
+    <a href="?page=search" class="active">🔍 Search</a>
+    <a href="?page=dashboard">📊 Dashboard</a>
+  </div>
+</nav>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div class="spinner"></div>
+  <p id="overlay-msg">Loading...</p>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- STAGE UPDATE MODAL -->
+<div class="modal-backdrop" id="stageModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔄 Quick Stage Update</div>
+    <div class="modal-subtitle" id="stageModalSub">Update stage and next action</div>
+
+    <div class="history-row" id="stageHistory"></div>
+
+    <div class="mfield-row">
+      <div class="mfield">
+        <label>Current Stage</label>
+        <select id="su_stage">
+          <option value="Lead">Lead</option>
+          <option value="Prospect">Prospect</option>
+          <option value="Qualified">Qualified</option>
+          <option value="Quoted">Quoted</option>
+          <option value="Follow-up">Follow-up</option>
+          <option value="Hot">Hot</option>
+          <option value="Closed Won">Closed Won</option>
+          <option value="Closed Lost">Closed Lost</option>
+        </select>
+      </div>
+      <div class="mfield">
+        <label>Next Action Type</label>
+        <select id="su_nextActionType">
+          <option value="">— Select —</option>
+          <option>Call</option>
+          <option>Visit</option>
+          <option>Send Quotation</option>
+          <option>Quote Follow-up</option>
+          <option>Final Close</option>
+          <option>Email</option>
+          <option>Viber</option>
+        </select>
+      </div>
+    </div>
+    <div class="mfield">
+      <label>Next Contact Date</label>
+      <input type="date" id="su_nextContactDate">
+    </div>
+    <div class="mfield">
+      <label>Update Notes</label>
+      <textarea id="su_notes" placeholder="What's the latest? Any new developments..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModal('stageModal')">Cancel</button>
+      <button class="btn-modal-save" id="su_saveBtn" onclick="saveStageUpdate()">💾 Save Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLLOW-UP VISIT MODAL -->
+<div class="modal-backdrop" id="followupModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📋 Log Follow-up Visit</div>
+    <div class="modal-subtitle" id="followupModalSub">New visit entry — pre-filled from last record</div>
+
+    <div class="history-row" id="followupHistory"></div>
+
+    <div class="section-divider">Visit Details</div>
+    <div class="mfield-row">
+      <div class="mfield">
+        <label>Date Visited ★</label>
+        <input type="date" id="fu_date">
+      </div>
+      <div class="mfield">
+        <label>Area</label>
+        <input type="text" id="fu_area">
+      </div>
+    </div>
+
+    <div class="mfield">
+      <label>Business Name</label>
+      <input type="text" id="fu_businessName" class="read-only" readonly>
+    </div>
+
+    <div class="mfield-row">
+      <div class="mfield">
+        <label>Contact Person ★</label>
+        <input type="text" id="fu_contactPerson">
+      </div>
+      <div class="mfield">
+        <label>Mobile ★</label>
+        <input type="tel" id="fu_mobile">
+      </div>
+    </div>
+
+    <div class="section-divider">Pipeline Update</div>
+    <div class="mfield-row">
+      <div class="mfield">
+        <label>Stage ★</label>
+        <select id="fu_stage">
+          <option value="Lead">Lead</option>
+          <option value="Prospect">Prospect</option>
+          <option value="Qualified">Qualified</option>
+          <option value="Quoted">Quoted</option>
+          <option value="Follow-up">Follow-up</option>
+          <option value="Hot">Hot</option>
+          <option value="Closed Won">Closed Won</option>
+          <option value="Closed Lost">Closed Lost</option>
+        </select>
+      </div>
+      <div class="mfield">
+        <label>Est. Value (₱) ★</label>
+        <input type="number" id="fu_estimatedValue" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="mfield-row">
+      <div class="mfield">
+        <label>Next Contact Date ★</label>
+        <input type="date" id="fu_nextContactDate">
+      </div>
+      <div class="mfield">
+        <label>Next Action Type</label>
+        <select id="fu_nextActionType">
+          <option value="">— Select —</option>
+          <option>Call</option>
+          <option>Visit</option>
+          <option>Send Quotation</option>
+          <option>Quote Follow-up</option>
+          <option>Final Close</option>
+          <option>Email</option>
+          <option>Viber</option>
+        </select>
+      </div>
+    </div>
+    <div class="mfield">
+      <label>Remarks ★</label>
+      <textarea id="fu_remarks" placeholder="What happened during this follow-up visit?"></textarea>
+    </div>
+
+    <div class="section-divider">Proof Photo ★</div>
+    <div class="upload-box" id="fu_photoBox" onclick="document.getElementById('fu_photoFile').click()">
+      <input type="file" id="fu_photoFile" accept="image/*" style="display:none" onchange="handleFuPhoto()">
+      <div style="text-align:center;padding:14px;">
+        <div style="font-size:24px;margin-bottom:6px;">📷</div>
+        <div style="font-size:13px;font-weight:600;color:#4a5568;">Tap to upload proof photo</div>
+        <div style="font-size:11px;color:#a0aec0;margin-top:3px;">Required for valid visit</div>
+        <div style="font-size:12px;color:#38a169;font-weight:600;margin-top:6px;" id="fu_photoStatus"></div>
+      </div>
+    </div>
+    <div style="height:4px;background:#e2e8f0;border-radius:2px;margin-top:8px;display:none;" id="fu_photoProgressWrap">
+      <div style="height:100%;background:#1a3c5e;border-radius:2px;width:0%;transition:width 0.3s;" id="fu_photoProgressBar"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModal('followupModal')">Cancel</button>
+      <button class="btn-modal-save" id="fu_saveBtn" onclick="saveFollowUp()">✅ Submit Visit</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+  <div class="page-header">
+    <h1>🔍 Search Leads</h1>
+    <p>Search by business name or Lead ID to update stage or log a follow-up visit.</p>
+  </div>
+
+  <!-- SEARCH BAR -->
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Business name or Lead ID (e.g. LCC Mall, LD-202602-0001)"
+      onkeydown="if(event.key==='Enter') doSearch()">
+    <button class="btn-search" onclick="doSearch()">🔍 Search</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="results-label" id="resultsLabel"></div>
+    <div id="resultsList"></div>
+  </div>
+
+  <!-- EMPTY STATE (default) -->
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🔍</div>
+    <p>Search for a business name or Lead ID<br>to view and update leads.</p>
+  </div>
+</div>
+
+<script>
+  let currentLead = null;
+  let fuPhotoLink = '';
+
+  // ── SEARCH ──────────────────────────────────────────────────────
+  function doSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) { showToast('Enter a search term first.', 'error'); return; }
+
+    showOverlay('Searching...');
+    google.script.run
+      .withSuccessHandler(renderResults)
+      .withFailureHandler(err => { hideOverlay(); showToast('Error: ' + err.message, 'error'); })
+      .searchLeads(q);
+  }
+
+  function renderResults(leads) {
+    hideOverlay();
+    const container = document.getElementById('resultsList');
+    const label     = document.getElementById('resultsLabel');
+    const empty     = document.getElementById('emptyState');
+    const results   = document.getElementById('results');
+
+    if (!leads || leads.length === 0) {
+      results.style.display = 'none';
+      empty.style.display   = 'block';
+      empty.innerHTML = '<div class="icon">😕</div><p>No leads found.<br>Try a different search term.</p>';
+      return;
+    }
+
+    empty.style.display   = 'none';
+    results.style.display = 'block';
+    label.textContent     = leads.length + ' result' + (leads.length > 1 ? 's' : '') + ' found';
+
+    container.innerHTML = leads.map(l => {
+      const stageKey  = (l.stage || 'lead').toLowerCase().replace(/\s+/g, '-');
+      const badgeKey  = stageKey;
+      const nextDate  = l.nextContactDate ? '📅 ' + l.nextContactDate : '';
+      const value     = l.estimatedValue ? '₱' + Number(l.estimatedValue).toLocaleString() : '';
+      const followUp  = l.followUpCount ? '🔁 Visit #' + l.followUpCount : '';
+
+      return `
+        <div class="lead-card stage-${stageKey}" data-leadid="${l.leadId}">
+          <div class="lead-card-top">
+            <div>
+              <div class="lead-biz">${l.businessName || '—'}</div>
+              <div class="lead-id">${l.leadId} · ${l.area || ''}</div>
+            </div>
+            <div class="stage-badge badge-${badgeKey}">${l.stage || 'Lead'}</div>
+          </div>
+          <div class="lead-meta">
+            ${l.contactPerson ? '<span>👤 ' + l.contactPerson + '</span>' : ''}
+            ${value           ? '<span>💰 ' + value + '</span>'           : ''}
+            ${nextDate        ? '<span>' + nextDate + '</span>'           : ''}
+            ${followUp        ? '<span>' + followUp + '</span>'           : ''}
+          </div>
+          <div class="lead-card-actions">
+            <button class="btn-action btn-update-stage" onclick="openStageModal(${JSON.stringify(l).replace(/"/g,'&quot;')})">
+              🔄 Update Stage
+            </button>
+            <button class="btn-action btn-followup" onclick="openFollowUpModal(${JSON.stringify(l).replace(/"/g,'&quot;')})">
+              📋 Log Follow-up
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── STAGE UPDATE MODAL ──────────────────────────────────────────
+  function openStageModal(lead) {
+    currentLead = lead;
+    document.getElementById('stageModalSub').textContent =
+      lead.businessName + ' · ' + (lead.area || '');
+
+    // History pills
+    document.getElementById('stageHistory').innerHTML = `
+      <div class="history-pill highlight">Current: ${lead.stage || 'Lead'}</div>
+      ${lead.followUpCount ? '<div class="history-pill">Visit #' + lead.followUpCount + '</div>' : ''}
+      ${lead.lastContactDate ? '<div class="history-pill">Last: ' + lead.lastContactDate + '</div>' : ''}
+    `;
+
+    document.getElementById('su_stage').value = lead.stage || 'Lead';
+    document.getElementById('su_nextActionType').value = lead.nextActionType || '';
+    const tomorrow = getTomorrow();
+    document.getElementById('su_nextContactDate').value = lead.nextContactDate || tomorrow;
+    document.getElementById('su_notes').value = '';
+
+    openModal('stageModal');
+  }
+
+  function saveStageUpdate() {
+    const btn = document.getElementById('su_saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const update = {
+      leadId:          currentLead.leadId,
+      rowIndex:        currentLead.rowIndex,
+      stage:           document.getElementById('su_stage').value,
+      nextActionType:  document.getElementById('su_nextActionType').value,
+      nextContactDate: document.getElementById('su_nextContactDate').value,
+      notes:           document.getElementById('su_notes').value.trim(),
+    };
+
+    google.script.run
+      .withSuccessHandler(result => {
+        btn.disabled = false;
+        btn.textContent = '💾 Save Update';
+        if (result.success) {
+          closeModal('stageModal');
+          showToast('✅ Stage updated to ' + update.stage, 'success');
+          doSearch(); // Refresh results
+        } else {
+          showToast('❌ ' + result.message, 'error');
+        }
+      })
+      .withFailureHandler(err => {
+        btn.disabled = false;
+        btn.textContent = '💾 Save Update';
+        showToast('❌ ' + err.message, 'error');
+      })
+      .updateLeadStage(update);
+  }
+
+  // ── FOLLOW-UP MODAL ─────────────────────────────────────────────
+  function openFollowUpModal(lead) {
+    currentLead = lead;
+    fuPhotoLink = '';
+
+    document.getElementById('followupModalSub').textContent =
+      'Follow-up #' + ((lead.followUpCount || 1) + 1) + ' for ' + lead.businessName;
+
+    // History pills
+    document.getElementById('followupHistory').innerHTML = `
+      <div class="history-pill highlight">Visit #${(lead.followUpCount || 1) + 1}</div>
+      <div class="history-pill">Stage: ${lead.stage || 'Lead'}</div>
+      ${lead.lastContactDate ? '<div class="history-pill">Last visit: ' + lead.lastContactDate + '</div>' : ''}
+    `;
+
+    // Pre-fill from last record
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fu_date').value          = today;
+    document.getElementById('fu_area').value          = lead.area || '';
+    document.getElementById('fu_businessName').value  = lead.businessName || '';
+    document.getElementById('fu_contactPerson').value = lead.contactPerson || '';
+    document.getElementById('fu_mobile').value        = lead.mobile || '';
+    document.getElementById('fu_stage').value         = lead.stage || 'Follow-up';
+    document.getElementById('fu_estimatedValue').value = lead.estimatedValue || '';
+    document.getElementById('fu_nextContactDate').value = getTomorrow();
+    document.getElementById('fu_nextActionType').value  = '';
+    document.getElementById('fu_remarks').value         = '';
+    document.getElementById('fu_photoStatus').textContent = '';
+    document.getElementById('fu_photoProgressWrap').style.display = 'none';
+    document.getElementById('fu_photoBox').style.background = '';
+    document.getElementById('fu_photoBox').style.borderColor = '';
+
+    openModal('followupModal');
+  }
+
+  function handleFuPhoto() {
+    const file = document.getElementById('fu_photoFile').files[0];
+    if (!file) return;
+
+    const statusEl   = document.getElementById('fu_photoStatus');
+    const progressWrap = document.getElementById('fu_photoProgressWrap');
+    const progressBar  = document.getElementById('fu_photoProgressBar');
+
+    statusEl.textContent = '⏳ Uploading...';
+    progressWrap.style.display = 'block';
+    progressBar.style.width = '0%';
+    fuPhotoLink = '';
+
+    let p = 0;
+    const interval = setInterval(() => {
+      p = Math.min(p + 10, 85);
+      progressBar.style.width = p + '%';
+    }, 150);
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const b64      = e.target.result.split(',')[1];
+      const bizName  = document.getElementById('fu_businessName').value || 'Unknown';
+      const dateVal  = document.getElementById('fu_date').value || new Date().toISOString().split('T')[0];
+      const safe     = bizName.replace(/[^a-zA-Z0-9]/g, '_');
+      const fileName = dateVal + '_' + safe + '_followup.' + file.name.split('.').pop();
+
+      google.script.run
+        .withSuccessHandler(result => {
+          clearInterval(interval);
+          progressBar.style.width = '100%';
+          setTimeout(() => progressWrap.style.display = 'none', 400);
+          if (result && result.url) {
+            fuPhotoLink = result.url;
+            statusEl.textContent = '✅ ' + result.name;
+            document.getElementById('fu_photoBox').style.borderColor = '#38a169';
+          } else {
+            statusEl.textContent = '❌ Upload failed';
+            showToast('Upload failed', 'error');
+          }
+        })
+        .withFailureHandler(err => {
+          clearInterval(interval);
+          progressWrap.style.display = 'none';
+          statusEl.textContent = '❌ Error';
+          showToast('Upload error: ' + err.message, 'error');
+        })
+        .saveFileToDrive(b64, file.type, fileName, 'photo');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function saveFollowUp() {
+    const required = {
+      'Date':           document.getElementById('fu_date').value,
+      'Contact Person': document.getElementById('fu_contactPerson').value.trim(),
+      'Mobile':         document.getElementById('fu_mobile').value.trim(),
+      'Est. Value':     document.getElementById('fu_estimatedValue').value,
+      'Remarks':        document.getElementById('fu_remarks').value.trim(),
+      'Photo':          fuPhotoLink,
+    };
+    const missing = Object.keys(required).filter(k => !required[k]);
+    if (missing.length) {
+      showToast('Missing: ' + missing.join(', '), 'error');
+      return;
+    }
+
+    const btn = document.getElementById('fu_saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    const data = {
+      // Carry over from original lead
+      area:             document.getElementById('fu_area').value.trim(),
+      municipality:     currentLead.municipality || '',
+      businessName:     document.getElementById('fu_businessName').value.trim(),
+      industry:         currentLead.industry || '',
+      contactPerson:    document.getElementById('fu_contactPerson').value.trim(),
+      position:         currentLead.position || '',
+      mobile:           document.getElementById('fu_mobile').value.trim(),
+      email:            currentLead.email || '',
+      decisionMaker:    currentLead.decisionMaker || 'Yes',
+      currentSupplier:  currentLead.currentSupplier || '',
+      clientStatus:     currentLead.clientStatus || 'New Client',
+      itemsNeeded:      currentLead.itemsNeeded || '',
+      // Updated values
+      date:             document.getElementById('fu_date').value,
+      estimatedValue:   document.getElementById('fu_estimatedValue').value,
+      stage:            document.getElementById('fu_stage').value,
+      nextContactDate:  document.getElementById('fu_nextContactDate').value,
+      nextActionType:   document.getElementById('fu_nextActionType').value,
+      remarks:          document.getElementById('fu_remarks').value.trim(),
+      photoLink:        fuPhotoLink,
+      // Quotation defaults
+      quotationSent:    'No',
+      quotationAmount:  '',
+      quotationFileLink: '',
+      sentVia:          '',
+      sentProofLink:    '',
+    };
+
+    google.script.run
+      .withSuccessHandler(result => {
+        btn.disabled = false;
+        btn.textContent = '✅ Submit Visit';
+        if (result.success) {
+          closeModal('followupModal');
+          showToast('✅ Follow-up logged! ' + result.leadId, 'success');
+          doSearch();
+        } else {
+          showToast('❌ ' + result.message, 'error');
+        }
+      })
+      .withFailureHandler(err => {
+        btn.disabled = false;
+        btn.textContent = '✅ Submit Visit';
+        showToast('❌ ' + err.message, 'error');
+      })
+      .submitLeadFromWeb(data);
+  }
+
+  // ── HELPERS ─────────────────────────────────────────────────────
+  function getTomorrow() {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  }
+
+  function openModal(id) {
+    document.getElementById(id).classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = 'show ' + type;
+    setTimeout(() => { t.className = ''; }, 4000);
+  }
+  function showOverlay(msg) {
+    document.getElementById('overlay-msg').textContent = msg;
+    document.getElementById('overlay').classList.add('show');
+  }
+  function hideOverlay() {
+    document.getElementById('overlay').classList.remove('show');
+  }
+</script>
+</body>
+</html>
